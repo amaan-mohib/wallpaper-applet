@@ -27,7 +27,7 @@
   "wallpaper_timer": {
     "type": "entry",
     "default": "3600",
-    "description": "Specify the interval (in seconds) to check for updates to change the wallpaper",
+    "description": "Specify the interval (in seconds) to check for updates",
     "tooltip": "For example: 3600 for 1hr"
   }
 }

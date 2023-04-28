@@ -11,6 +11,7 @@ const UUID = "wallpaper-changer@amaan-mohib";
 const ICON = "icon";
 const CMD_SETTINGS = "cinnamon-settings applets " + UUID;
 const Gettext = imports.gettext;
+const AppletDir = imports.ui.appletManager.appletMeta[UUID].path;
 
 Gettext.bindtextdomain(UUID, GLib.get_home_dir() + "/.local/share/locale");
 
@@ -26,16 +27,6 @@ const SettingsMap = {
   wallpaper_path: "Wallpapers path",
   wallpaper_timer: "Timer (interval to check for updates)",
 };
-
-function debounce(func, timeout = 300) {
-  let timer;
-  return (...args) => {
-    clearTimeout(timer);
-    timer = setTimeout(() => {
-      func.apply(this, args);
-    }, timeout);
-  };
-}
 
 function WallpaperChanger(orientation, panel_height, instance_id) {
   this.settings = new Settings.AppletSettings(this, UUID, instance_id);
@@ -59,9 +50,7 @@ WallpaperChanger.prototype = {
         key,
         key,
         function () {
-          debounce(() => {
-            this.property_changed(key);
-          });
+          this.property_changed(key);
         },
         null
       );
@@ -82,19 +71,30 @@ WallpaperChanger.prototype = {
   },
 
   run_wallpaper_script: function () {
-    if (this.wallpaper_path && this.wallpaper_delay && this.wallpaper_timer) {
-      log("running");
-      // Util.spawnCommandLine('script --path --delay --interval');
+    const dir = Gio.file_new_for_path(this.wallpaper_path);
+    if (
+      dir.query_exists(null) &&
+      this.wallpaper_path &&
+      this.wallpaper_delay &&
+      this.wallpaper_timer
+    ) {
+      const command =
+        AppletDir +
+        "/scripts/wallpaper_script.py" +
+        ` ${this.wallpaper_path} ${this.wallpaper_delay}`;
+      // log(command);
+      Util.spawnCommandLine(command);
     }
   },
 
   property_changed: function (key) {
+    this._removeTimeout();
     if (key === "wallpaper_path") {
       if (this.wallpaper_path.startsWith("file://")) {
         this.wallpaper_path = this.wallpaper_path.slice("file://".length);
       }
     }
-    log(this[key]);
+    // log(this[key]);
     if (this.wallpaper_timer) this._start_applet();
   },
 

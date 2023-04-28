@@ -2,3 +2,4 @@ https://github.com/BenJuan26/sound-switch-applet/blob/master/applet.js
 http://billauer.co.il/blog/2018/12/writing-cinnamon-applet/
 https://github.com/linuxmint/cinnamon-spices-applets/tree/master/devutils%40fogl/files/devutils%40fogl
 https://github.com/linuxmint/cinnamon-spices-applets/tree/master/bing-wallpaper%40starcross.dev/files/bing-wallpaper%40starcross.dev
+https://github.com/linuxmint/cinnamon-spices-applets/tree/master/rwall%40typicalfoobar/files/rwall%40typicalfoobar
