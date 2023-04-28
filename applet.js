@@ -6,6 +6,8 @@ const Gtk = imports.gi.Gtk;
 const Settings = imports.ui.settings;
 const Mainloop = imports.mainloop;
 const Lang = imports.lang;
+const PopupMenu = imports.ui.popupMenu;
+const St = imports.gi.St;
 
 const UUID = "wallpaper-changer@amaan-mohib";
 const ICON = "icon";
@@ -20,6 +22,9 @@ function _(str) {
 }
 function log(message) {
   global.log(`[${UUID}]: ${message}`);
+}
+function logError(message) {
+  global.logError(`[${UUID}]: ${message}`);
 }
 
 const SettingsMap = {
@@ -58,10 +63,15 @@ WallpaperChanger.prototype = {
     this.set_applet_icon_name("icon");
     this.set_applet_tooltip(_("Wallpaper Changer"));
     this.initialize_wallpaper_dir();
+    this.initMenu(orientation);
     this._start_applet();
   },
 
   on_applet_clicked: function () {
+    this.menu.toggle();
+  },
+
+  open_settings: function () {
     Util.spawnCommandLine(CMD_SETTINGS);
   },
 
@@ -120,6 +130,31 @@ WallpaperChanger.prototype = {
       seconds,
       Lang.bind(this, this._start_applet)
     );
+  },
+
+  initMenu: function (orientation) {
+    // The menu manager closes the menu after focus has changed.
+    // Without adding the menu to the menu manager, the menu would stay open
+    // until the user clicked on the applet again.
+    this.menuManager = new PopupMenu.PopupMenuManager(this);
+
+    // Create the menu
+    this.menu = new Applet.AppletPopupMenu(this, orientation);
+
+    // Add the menu to the menu manager
+    this.menuManager.addMenu(this.menu);
+
+    // Create the "delay" label
+    let delayLabel = new PopupMenu.PopupMenuItem(
+      _("Delay") + `: ${this.wallpaper_delay}s`
+    );
+    delayLabel.connect(
+      "activate",
+      Lang.bind(this, () => {
+        this.open_settings();
+      })
+    );
+    this.menu.addMenuItem(delayLabel);
   },
 
   destroy: function () {
