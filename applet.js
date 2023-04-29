@@ -26,11 +26,29 @@ function log(message) {
 function logError(message) {
   global.logError(`[${UUID}]: ${message}`);
 }
+function backtick(command) {
+  try {
+    let [result, stdout, stderr] = GLib.spawn_command_line_sync(command);
+    if (stdout != null) {
+      return stdout.toString();
+    }
+  } catch (e) {
+    logError(e);
+  }
+
+  return "";
+}
+function formatTime(time) {
+  if (time < 60) return `${time}s`;
+  else if (time < 3600) return `${parseInt(Number(time) / 60)}min`;
+  return `${parseInt(Number(time) / 3600)}hr`;
+}
 
 const SettingsMap = {
   wallpaper_delay: "Delay",
   wallpaper_path: "Wallpapers path",
   wallpaper_timer: "Timer (interval to check for updates)",
+  wallpaper_paused: "Pause slideshow",
 };
 
 function WallpaperChanger(orientation, panel_height, instance_id) {
@@ -75,12 +93,18 @@ WallpaperChanger.prototype = {
     Util.spawnCommandLine(CMD_SETTINGS);
   },
 
-  _start_applet: function () {
-    this.run_wallpaper_script();
-    this._setTimeout(this.wallpaper_timer || 3600);
+  _start_applet: function (override) {
+    if (this.wallpaper_paused) {
+      this.buildMenu();
+      this._removeTimeout();
+    } else {
+      this.run_wallpaper_script(override);
+      this.buildMenu();
+      this._setTimeout(this.wallpaper_timer || 3600);
+    }
   },
 
-  run_wallpaper_script: function () {
+  run_wallpaper_script: function (override) {
     const dir = Gio.file_new_for_path(this.wallpaper_path);
     if (
       dir.query_exists(null) &&
@@ -91,9 +115,18 @@ WallpaperChanger.prototype = {
       const command =
         AppletDir +
         "/scripts/wallpaper_script.py" +
-        ` ${this.wallpaper_path} ${this.wallpaper_delay}`;
-      // log(command);
-      Util.spawnCommandLine(command);
+        ` ${this.wallpaper_path} ${
+          override === "next" || override === "prev"
+            ? override
+            : this.wallpaper_delay
+        }`;
+      const outputs = backtick(command);
+      this._lastTimeLabel = "";
+      outputs.split("\n").forEach((output) => {
+        if (output.startsWith("Last changed")) {
+          this._lastTimeLabel = output;
+        }
+      });
     }
   },
 
@@ -143,10 +176,28 @@ WallpaperChanger.prototype = {
 
     // Add the menu to the menu manager
     this.menuManager.addMenu(this.menu);
+    this.buildMenu();
+  },
 
+  buildMenu() {
+    this.menu.removeAll();
+    const dir = Gio.file_new_for_path(this.wallpaper_path);
+    if (!dir.query_exists(null)) {
+      let notExistsLabelItem = new PopupMenu.PopupMenuItem(
+        _("The wallpaper path does not exists!")
+      );
+      notExistsLabelItem.connect(
+        "activate",
+        Lang.bind(this, () => {
+          this.open_settings();
+        })
+      );
+      this.menu.addMenuItem(notExistsLabelItem);
+      return;
+    }
     // Create the "delay" label
     let delayLabel = new PopupMenu.PopupMenuItem(
-      _("Delay") + `: ${this.wallpaper_delay}s`
+      _("Delay") + `: ${formatTime(Number(this.wallpaper_delay))}`
     );
     delayLabel.connect(
       "activate",
@@ -155,6 +206,59 @@ WallpaperChanger.prototype = {
       })
     );
     this.menu.addMenuItem(delayLabel);
+    if (this._lastTimeLabel) {
+      let labelItem = new PopupMenu.PopupMenuItem(_(this._lastTimeLabel), {
+        reactive: false,
+      });
+      this.menu.addMenuItem(labelItem);
+    }
+
+    this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+
+    let nextMenuItem = new PopupMenu.PopupMenuItem(_("Next"));
+    nextMenuItem.connect(
+      "activate",
+      Lang.bind(this, () => {
+        this.wallpaper_paused = false;
+        this._start_applet("next");
+      })
+    );
+    this.menu.addMenuItem(nextMenuItem);
+    let prevMenuItem = new PopupMenu.PopupMenuItem(_("Previous"));
+    prevMenuItem.connect(
+      "activate",
+      Lang.bind(this, () => {
+        this.wallpaper_paused = false;
+        this._start_applet("prev");
+      })
+    );
+    this.menu.addMenuItem(prevMenuItem);
+
+    this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+
+    let pauseMenuItem = new PopupMenu.PopupSwitchMenuItem(
+      _("Paused"),
+      this.wallpaper_paused
+    );
+    pauseMenuItem.connect(
+      "toggled",
+      Lang.bind(this, (item) => {
+        this.wallpaper_paused = item.state;
+        this._start_applet();
+      })
+    );
+    this.menu.addMenuItem(pauseMenuItem);
+
+    this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+
+    let settingsItem = new PopupMenu.PopupMenuItem(_("Preferences"));
+    settingsItem.connect(
+      "activate",
+      Lang.bind(this, () => {
+        this.open_settings();
+      })
+    );
+    this.menu.addMenuItem(settingsItem);
   },
 
   destroy: function () {

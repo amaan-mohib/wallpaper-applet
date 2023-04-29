@@ -4,3 +4,4 @@ https://github.com/linuxmint/cinnamon-spices-applets/tree/master/devutils%40fogl
 https://github.com/linuxmint/cinnamon-spices-applets/tree/master/bing-wallpaper%40starcross.dev/files/bing-wallpaper%40starcross.dev
 https://github.com/linuxmint/cinnamon-spices-applets/tree/master/rwall%40typicalfoobar/files/rwall%40typicalfoobar
 https://github.com/linuxmint/cinnamon-spices-applets/blob/master/graphicsCenter%40scollins/files/graphicsCenter%40scollins/applet.js
+https://nickdurante.github.io/development/Writing-a-Cinnamon-Applet/

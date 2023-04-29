@@ -29,5 +29,14 @@
     "default": "3600",
     "description": "Specify the interval (in seconds) to check for updates",
     "tooltip": "For example: 3600 for 1hr"
+  },
+  "head_paused": {
+    "type": "header",
+    "description": "Paused"
+  },
+  "wallpaper_paused": {
+    "type": "checkbox",
+    "default": false,
+    "description": "Pause the wallpaper slideshow"
   }
 }
