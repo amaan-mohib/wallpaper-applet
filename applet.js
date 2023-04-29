@@ -213,6 +213,19 @@ WallpaperChanger.prototype = {
       this.menu.addMenuItem(labelItem);
     }
 
+    if (this.wallpaper_path) {
+      let openDirItem = new PopupMenu.PopupMenuItem(
+        _("Open wallpapers directory")
+      );
+      openDirItem.connect(
+        "activate",
+        Lang.bind(this, () => {
+          Util.spawnCommandLine(`xdg-open ${this.wallpaper_path}`);
+        })
+      );
+      this.menu.addMenuItem(openDirItem);
+    }
+
     this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
     let nextMenuItem = new PopupMenu.PopupMenuItem(_("Next"));
