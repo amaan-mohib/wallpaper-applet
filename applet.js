@@ -38,10 +38,21 @@ function backtick(command) {
 
   return "";
 }
+const toHHMMSS = (secs) => {
+  const sec_num = parseInt(secs, 10);
+  const hours = Math.floor(sec_num / 3600);
+  const minutes = Math.floor(sec_num / 60) % 60;
+  const seconds = sec_num % 60;
+
+  return [hours, minutes, seconds].map((v) => (v < 10 ? "0" + v : v));
+};
 function formatTime(time) {
-  if (time < 60) return `${time}s`;
-  else if (time < 3600) return `${parseInt(Number(time) / 60)}min`;
-  return `${parseInt(Number(time) / 3600)}hr`;
+  const [hours, minutes, seconds] = toHHMMSS(Number(time));
+  const timeArr = [];
+  if (hours !== "00") timeArr.push(`${hours}hr`);
+  if (minutes !== "00") timeArr.push(`${minutes}min`);
+  if (seconds !== "00") timeArr.push(`${seconds}s`);
+  return timeArr.join(" ");
 }
 
 const SettingsMap = {
@@ -137,8 +148,11 @@ WallpaperChanger.prototype = {
         this.wallpaper_path = this.wallpaper_path.slice("file://".length);
       }
     }
-    // log(this[key]);
-    if (this.wallpaper_timer) this._start_applet();
+
+    if (SettingsMap[key] !== this[key]) {
+      if (this.wallpaper_timer) this._start_applet();
+    }
+    SettingsMap[key] = this[key];
   },
 
   initialize_wallpaper_dir: function () {
