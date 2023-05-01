@@ -117,12 +117,7 @@ WallpaperChanger.prototype = {
 
   run_wallpaper_script: function (override) {
     const dir = Gio.file_new_for_path(this.wallpaper_path);
-    if (
-      dir.query_exists(null) &&
-      this.wallpaper_path &&
-      this.wallpaper_delay &&
-      this.wallpaper_timer
-    ) {
+    if (dir.query_exists(null) && this.wallpaper_path && this.wallpaper_delay) {
       const command =
         AppletDir +
         "/scripts/wallpaper_script.py" +
@@ -144,13 +139,14 @@ WallpaperChanger.prototype = {
   property_changed: function (key) {
     this._removeTimeout();
     if (key === "wallpaper_path") {
+      this.initialize_wallpaper_dir();
       if (this.wallpaper_path.startsWith("file://")) {
         this.wallpaper_path = this.wallpaper_path.slice("file://".length);
       }
     }
 
     if (SettingsMap[key] !== this[key]) {
-      if (this.wallpaper_timer) this._start_applet();
+      this._start_applet();
     }
     SettingsMap[key] = this[key];
   },

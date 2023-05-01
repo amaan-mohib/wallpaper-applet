@@ -22,11 +22,18 @@
   },
   "head_timer": {
     "type": "header",
-    "description": "Interval"
+    "description": "Custom interval"
+  },
+  "wallpaper_custom_timer": {
+    "type": "checkbox",
+    "default": false,
+    "description": "Specify a custom interval to check for updates",
+    "tooltip": "Default: 1hr"
   },
   "wallpaper_timer": {
     "type": "entry",
     "default": "3600",
+    "dependency": "wallpaper_custom_timer",
     "description": "Specify the interval (in seconds) to check for updates",
     "tooltip": "For example: 3600 for 1hr"
   },
